@@ -10,45 +10,63 @@ import UIKit
 class SetGameViewController: UIViewController {
     private var game = GameOfSet()
     
+    private var dealDeckPosition: CGPoint {
+        return CGPoint(x: view.bounds.midX, y: view.bounds.maxY)
+    }
+    
+    private var cardViewsToDeal: [CardView] {
+        return cardBoardView.cardViews.filter { $0.alpha == 0 }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         updateViewFromModel()
     }
     
-    private func createNewCardView(for card: Card) -> CardView {
-        let cardView = CardView()
+    // MARK: - Updates
+    
+    private func updateCardView(_ cardView: CardView, for card: Card) {
         cardView.numberInt = card.number.rawValue
         cardView.shapeInt = card.shape.rawValue
         cardView.shadingInt = card.shading.rawValue
         cardView.colorInt = card.color.rawValue
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapCard))
-        //tapGesture.delegate = self
-        cardView.addGestureRecognizer(tapGesture)
+        cardView.outline = game.cardsSelected.contains(card) ? .selected : .notSelected
         
-        let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(add3CardsWithSwipe))
-        swipeGesture.direction = [.left, .right]
-        cardView.addGestureRecognizer(swipeGesture)
-        
-        let rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(shuffleWithRotation))
-        cardView.addGestureRecognizer(rotationGesture)
-        
-        return cardView
+        if game.isSet != nil, game.cardsTryMatched.contains(card) {
+            cardView.outline = game.isSet! ? .matched : .notMatched
+        }
     }
     
     private func updateViewFromModel() {
-        var cardViews = [CardView]()
-        for card in game.cardsOnTable {
-            let cardView = createNewCardView(for: card)
-            cardView.outline = game.cardsSelected.contains(card) ? .selected : .notSelected
-            
-            if game.isSet != nil, game.cardsTryMatched.contains(card) {
-                cardView.outline = game.isSet! ? .matched : .notMatched
-            }
-            cardViews.append(cardView)
+        // TODO: Create new cards after match
+        if game.cardsOnTable.count - cardBoardView.cardViews.count < 0 {
+            cardBoardView.remove(cardViews: cardBoardView.cardViewsMatched)
+        } else {
+            cardBoardView.updateMatchedCards()
         }
-        cardBoardView.cardViews = cardViews
         
+        for index in game.cardsOnTable.indices {
+            let card = game.cardsOnTable[index]
+            
+            if game.cardsOnTable.count - cardBoardView.cardViews.count > 0 {
+                let cardView = CardView()
+                cardBoardView.add(cardViews: [cardView])
+            }
+            updateCardView(cardBoardView.cardViews[index], for: card)
+        }
+        
+        for cardView in cardBoardView.cardViews {
+            if cardView.gestureRecognizers == nil {
+                let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapCard(_:)))
+                cardView.addGestureRecognizer(tapGesture)
+            }
+        }
+        updateUIFromModel()
+        playDealAnimation()
+    }
+    
+    private func updateUIFromModel() {
         scoreLabel.text = "Score: \(game.score)"
         timeLabel.text = "Time: \(game.time)"
         timeLabel.isHidden = true
@@ -60,9 +78,25 @@ class SetGameViewController: UIViewController {
         } else {
             add3CardsButton.setTitle("+3 Cards", for: .normal)
         }
-        //add3CardsButton.isEnabled = game.cardsOnTable.count < cardButtons.count && !game.cards.isEmpty || game.isSet != nil && game.isSet! && !game.cards.isEmpty
         add3CardsButton.setTitleColor(add3CardsButton.isEnabled ? Color.activeButtonColor : Color.inactiveButtonColor, for: .normal)
+        add3CardsButton.isEnabled = !game.cards.isEmpty
+        add3CardsButton.setTitleColor(game.cards.isEmpty ? Color.inactiveButtonColor : Color.activeButtonColor, for: .normal)
     }
+    
+    // MARK: - Animations
+    
+    private func playDealAnimation() {
+        let startPoint = CGPoint(x: view.bounds.midX, y: view.bounds.maxY)
+        for cardView in cardViewsToDeal.reversed() {
+            cardView.dealAnimation(from: startPoint, delay: TimeInterval(cardViewsToDeal.count))
+        }
+    }
+    
+    private func playRearrangeAnimation() {
+        
+    }
+    
+    // MARK: - Outlets & Actions
     
     @IBOutlet weak var cardBoardView: CardBoardView!
     @IBOutlet weak var scoreLabel: UILabel!
@@ -71,7 +105,11 @@ class SetGameViewController: UIViewController {
     
     @IBOutlet weak var getHintButton: UIButton!
     @IBAction func getHint(_ sender: UIButton) {
+        // Hint не удаляет подсказанный набор, если он сматчился.
         updateViewFromModel()
+        for cardView in cardBoardView.cardViews {
+            cardView.isHinted = false
+        }
         for index in game.getHint() {
             cardBoardView.cardViews[index].isHinted = true
         }
@@ -80,6 +118,7 @@ class SetGameViewController: UIViewController {
     @IBOutlet weak var newGameButton: UIButton!
     @IBAction func newGame(_ sender: UIButton) {
         game = GameOfSet()
+        cardBoardView.reset()
         updateViewFromModel()
     }
     
@@ -100,6 +139,8 @@ class SetGameViewController: UIViewController {
         default: break
         }
     }
+    
+    // MARK: - Gestures
     
     @objc func tapCard(_ gesture: UITapGestureRecognizer) {
         guard let gestureView = gesture.view else { return }

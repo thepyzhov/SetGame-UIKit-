@@ -77,7 +77,7 @@
                                 </subviews>
                             </stackView>
                             <view contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="XXq-aJ-zus" customClass="CardBoardView" customModule="SetGame" customModuleProvider="target">
-                                <rect key="frame" x="16" y="70" width="343" height="664"/>
+                                <rect key="frame" x="10" y="70" width="355" height="664"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <gestureRecognizers/>
                                 <connections>
@@ -88,7 +88,7 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" red="0.034319401018329476" green="0.39208152077414771" blue="0.016616893262820918" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="XXq-aJ-zus" secondAttribute="trailing" constant="16" id="GIS-7Q-XZd"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="XXq-aJ-zus" secondAttribute="trailing" constant="10" id="GIS-7Q-XZd"/>
                             <constraint firstItem="MK4-AV-igV" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="Imn-d2-vB7"/>
                             <constraint firstItem="G3w-5L-drY" firstAttribute="top" secondItem="XXq-aJ-zus" secondAttribute="bottom" constant="8" symbolic="YES" id="RTh-B9-bj8"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="G3w-5L-drY" secondAttribute="bottom" id="TpD-Fr-zVt"/>
@@ -97,7 +97,7 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="G3w-5L-drY" secondAttribute="trailing" constant="16" id="jDM-KS-5w6"/>
                             <constraint firstItem="G3w-5L-drY" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="kRj-8H-PU1"/>
                             <constraint firstItem="XXq-aJ-zus" firstAttribute="top" secondItem="MK4-AV-igV" secondAttribute="bottom" constant="10" id="qjo-a3-q0R"/>
-                            <constraint firstItem="XXq-aJ-zus" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="xMp-Ya-abQ"/>
+                            <constraint firstItem="XXq-aJ-zus" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="xMp-Ya-abQ"/>
                         </constraints>
                     </view>
                     <connections>

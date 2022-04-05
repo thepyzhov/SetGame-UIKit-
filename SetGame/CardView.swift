@@ -39,8 +39,16 @@ class CardView: UIView {
             }
         }
     }
-    var outline: OutlineType = .notSelected { didSet { setNeedsDisplay(); setNeedsLayout() } }
+    var outline: OutlineType = .notSelected {
+        didSet {
+            if self.outline == .matched {
+                alpha = Constant.cardMatchedAlpha
+            }
+            setNeedsDisplay()
+            setNeedsLayout()
+        } }
     var isHinted = false { didSet { setNeedsDisplay(); setNeedsLayout() } }
+    var isFaceUp = false { didSet { setNeedsDisplay(); setNeedsLayout() } }
     
     enum OutlineType {
         case selected
@@ -48,9 +56,6 @@ class CardView: UIView {
         case matched
         case notMatched
     }
-    
-    var isSelected = false { didSet { setNeedsDisplay(); setNeedsLayout() } }
-    var isMatched: Bool? = nil { didSet { setNeedsDisplay(); setNeedsLayout() } }
     
     private var number = 0 { didSet { setNeedsDisplay(); setNeedsLayout() } }
     private var shape = Shape.diamond { didSet { setNeedsDisplay(); setNeedsLayout() } }
@@ -69,26 +74,77 @@ class CardView: UIView {
         case striped
         case filled
     }
+   
+    // MARK: - Initializers
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        initSetup()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        initSetup()
+    }
+    
+    private func initSetup() {
+        alpha = 0
         contentMode = .redraw
         backgroundColor = Color.transparent
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    // MARK: - Animations
+    
+    func dealAnimation(from startPoint: CGPoint, delay: TimeInterval) {
+        let currentCenter = center
+        let currentBounds = bounds
+        
+        alpha = 1.0
+        center = startPoint
+        bounds = CGRect(x: 0.0, y: 0.0,
+                        width: bounds.width * Constant.cardSmallSizeMultiplier,
+                        height: bounds.height * Constant.cardSmallSizeMultiplier)
+        
+        UIViewPropertyAnimator.runningPropertyAnimator(
+            withDuration: AnimationConstant.dealDuration,
+            delay: delay * AnimationConstant.dealDelayMultiplier,
+            options: [.curveEaseOut],
+            animations: {
+                self.center = currentCenter
+                self.bounds = currentBounds
+            },
+            completion: { finished in
+                UIView.transition(
+                    with: self,
+                    duration: AnimationConstant.dealFlipDuration,
+                    options: [.transitionFlipFromLeft],
+                    animations: {
+                        self.isFaceUp = true
+                    }
+                )
+            }
+        )
     }
+    
+    // MARK: - Drawing
     
     override func draw(_ rect: CGRect) {
         drawSelectionBorder()
         drawRoundedRectBackground()
-        drawShape()
+        if isFaceUp {
+            drawShape()
+        } else {
+            drawCardBack()
+        }
     }
     
+    private func drawCardBack() {
+        if let cardBackImage = UIImage(named: "cardback", in: Bundle(for: self.classForCoder), compatibleWith: traitCollection) {
+            cardBackImage.draw(in: bounds)
+        }
+    }
     
-    
-    func drawSelectionBorder() {
+    private func drawSelectionBorder() {
         guard let context = UIGraphicsGetCurrentContext() else { return }
         context.saveGState()
         let selectionRect = UIBezierPath(roundedRect: bounds, cornerRadius: Constant.cardRoundedRectCornerRadius)
@@ -207,8 +263,10 @@ extension CardView {
     private struct Constant {
         static let cardRoundedRectCornerRadius: CGFloat = 8.0
         static let cardSelectionBorderLineWidth: CGFloat = 3.5
-        // scale = 0.3, spacing = 1.5
-        // scale = 0.45, spacing = 1.4
+        static let cardSmallSizeMultiplier: CGFloat = 0.6
+        
+        static let cardMatchedAlpha: CGFloat = 0.5
+        
         static let shapeScale: CGFloat = 0.45
         static let shapeSpacing: CGFloat = 1.4
         static let spaheLineWidth: CGFloat = 0.8
@@ -216,6 +274,12 @@ extension CardView {
         static let stripeLineWidth: CGFloat = spaheLineWidth * 0.5
         static let stripedShapeFill: CGFloat = 0.15
         static let stripeStep = Constant.stripeLineWidth * (1 / Constant.stripedShapeFill)
+    }
+    
+    private struct AnimationConstant {
+        static let dealDuration: TimeInterval = 0.6
+        static let dealFlipDuration: TimeInterval = 0.6
+        static let dealDelayMultiplier: TimeInterval = 0.3
     }
     
     private struct Color {

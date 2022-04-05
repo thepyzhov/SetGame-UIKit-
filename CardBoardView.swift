@@ -9,20 +9,47 @@ import UIKit
 
 class CardBoardView: UIView {
     
-    var cardViews = [CardView]() {
-        willSet { removeSubviews() }
-        didSet { addSubviews(); setNeedsLayout() }
+    private(set) var cardViews = [CardView]()
+    
+    var cardViewsMatched: [CardView] {
+        cardViews.filter { $0.outline == .matched }
     }
     
-    private func addSubviews() {
-        for cardView in cardViews {
+    func add(cardViews: [CardView]) {
+        cardViews.forEach { cardView in
+            self.cardViews.append(cardView)
             addSubview(cardView)
+        }
+        layoutIfNeeded()
+    }
+    
+    func remove(cardViews: [CardView]) {
+        cardViews.forEach {
+            $0.removeFromSuperview()
+        }
+        self.cardViews.remove(elements: cardViews)
+        layoutIfNeeded()
+    }
+    
+    func reset() {
+        cardViews.forEach {
+            self.cardViews.remove(elements: [$0])
+            $0.removeFromSuperview()
+        }
+        layoutIfNeeded()
+    }
+    
+    private func replaceWithNewCard(cardView: CardView) {
+        if let index = cardViews.firstIndex(of: cardView) {
+            cardViews[index].removeFromSuperview()
+            cardViews[index] = CardView()
+            addSubview(cardViews[index])
         }
     }
     
-    private func removeSubviews() {
-        for cardView in cardViews {
-            cardView.removeFromSuperview()
+    func updateMatchedCards() {
+        cardViewsMatched.forEach { cardView in
+            replaceWithNewCard(cardView: cardView)
         }
     }
     
@@ -33,17 +60,21 @@ class CardBoardView: UIView {
         grid.cellCount = cardViews.count
         
         for index in cardViews.indices {
-            cardViews[index].frame = grid[index]!.insetBy(dx: Constant.cardInset, dy: Constant.cardInset)
+            UIViewPropertyAnimator.runningPropertyAnimator(
+                withDuration: 0.3,
+                delay: 0.1,
+                options: [.curveEaseOut],
+                animations: {
+                    self.cardViews[index].frame = grid[index]!.insetBy(dx: Constant.cardInset, dy: Constant.cardInset)
+
+                }
+            )
         }
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         updateView()
-    }
-
-    override func draw(_ rect: CGRect) {
-        // Drawing code
     }
 }
 
